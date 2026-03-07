@@ -18,7 +18,7 @@ function getLikedPosts(): string[] {
 function addLikedPost(postId: string) {
   const set = new Set(getLikedPosts());
   set.add(postId);
-  localStorage.setItem(LIKED_KEY, JSON.stringify([...set]));
+  localStorage.setItem(LIKED_KEY, JSON.stringify(Array.from(set)));
 }
 
 type Post = {
