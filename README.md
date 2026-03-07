@@ -33,11 +33,11 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Galleries
+## Board
 
-- **Execution Log** (`/gallery/execution`) — too much talk. just move
-- **Achievement** (`/gallery/achievement`) — make it.
-- **Philosophy** (`/gallery/philosophy`) — think hard
+- Homepage with tabbed board: Execution Log (default), Achievement, Philosophy
+- Posts show like count, comment count, optional image thumbnail
+- Post detail: like button (localStorage prevents duplicate likes), comments, comment form
 
 ## Admin
 

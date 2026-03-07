@@ -3,6 +3,34 @@ import { supabase } from "@/lib/supabase";
 import { sanitize, isNumericPassword } from "@/lib/utils";
 import { GALLERIES, type GallerySlug } from "@/lib/galleries";
 
+async function getLikeCounts(postIds: string[]) {
+  if (postIds.length === 0) return new Map<string, number>();
+  const { data } = await supabase
+    .from("post_likes")
+    .select("post_id")
+    .in("post_id", postIds);
+  const counts = new Map<string, number>();
+  for (const id of postIds) counts.set(id, 0);
+  for (const row of data ?? []) {
+    counts.set(row.post_id, (counts.get(row.post_id) ?? 0) + 1);
+  }
+  return counts;
+}
+
+async function getCommentCounts(postIds: string[]) {
+  if (postIds.length === 0) return new Map<string, number>();
+  const { data } = await supabase
+    .from("comments")
+    .select("post_id")
+    .in("post_id", postIds);
+  const counts = new Map<string, number>();
+  for (const id of postIds) counts.set(id, 0);
+  for (const row of data ?? []) {
+    counts.set(row.post_id, (counts.get(row.post_id) ?? 0) + 1);
+  }
+  return counts;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const gallery = searchParams.get("gallery");
@@ -18,7 +46,17 @@ export async function GET(request: NextRequest) {
     if (error || !post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
-    return NextResponse.json(post);
+
+    const [likeCounts, commentCounts] = await Promise.all([
+      getLikeCounts([id]),
+      getCommentCounts([id]),
+    ]);
+
+    return NextResponse.json({
+      ...post,
+      like_count: likeCounts.get(id) ?? 0,
+      comment_count: commentCounts.get(id) ?? 0,
+    });
   }
 
   if (!gallery || !(gallery in GALLERIES)) {
@@ -36,7 +74,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch posts" }, { status: 500 });
   }
 
-  return NextResponse.json(posts ?? []);
+  const list = posts ?? [];
+  const postIds = list.map((p: { id: string }) => p.id);
+  const [likeCounts, commentCounts] = await Promise.all([
+    getLikeCounts(postIds),
+    getCommentCounts(postIds),
+  ]);
+
+  const enriched = list.map((p: { id: string }) => ({
+    ...p,
+    like_count: likeCounts.get(p.id) ?? 0,
+    comment_count: commentCounts.get(p.id) ?? 0,
+  }));
+
+  return NextResponse.json(enriched);
 }
 
 export async function POST(request: NextRequest) {

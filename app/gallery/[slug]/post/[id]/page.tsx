@@ -15,11 +15,8 @@ export default async function PostPage({
 
   return (
     <main className="min-h-screen max-w-2xl mx-auto px-6 py-12">
-      <Link
-        href={`/gallery/${slug}`}
-        className="text-neutral-500 hover:text-neutral-300 text-sm mb-8 block"
-      >
-        ← {gallery.title}
+      <Link href="/" className="text-neutral-500 hover:text-neutral-300 text-sm mb-8 block">
+        ← board
       </Link>
       <PostDetail gallerySlug={slug} postId={id} />
     </main>

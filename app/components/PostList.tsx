@@ -11,6 +11,8 @@ type Post = {
   nickname: string;
   image_url: string | null;
   created_at: string;
+  like_count: number;
+  comment_count: number;
 };
 
 export function PostList({ gallery }: { gallery: string }) {
@@ -18,6 +20,7 @@ export function PostList({ gallery }: { gallery: string }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     fetch(`/api/posts?gallery=${gallery}`)
       .then((r) => r.json())
       .then(setPosts)
@@ -35,10 +38,28 @@ export function PostList({ gallery }: { gallery: string }) {
             href={`/gallery/${gallery}/post/${post.id}`}
             className="block p-4 border border-neutral-800 rounded-lg hover:border-neutral-600 transition"
           >
-            <h2 className="font-medium">{post.title}</h2>
-            <p className="text-neutral-500 text-sm mt-1">
-              {post.nickname} · {new Date(post.created_at).toLocaleDateString()}
-            </p>
+            <div className="flex gap-4">
+              {post.image_url && (
+                <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden bg-neutral-900">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={post.image_url}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <h2 className="font-medium truncate">{post.title}</h2>
+                <p className="text-neutral-500 text-sm mt-1">
+                  {post.nickname} · {new Date(post.created_at).toLocaleDateString()}
+                </p>
+                <div className="flex gap-4 mt-2 text-neutral-500 text-sm">
+                  <span>♥ {post.like_count ?? 0}</span>
+                  <span>💬 {post.comment_count ?? 0}</span>
+                </div>
+              </div>
+            </div>
           </Link>
         </li>
       ))}

@@ -16,7 +16,7 @@ export default async function WritePostPage({
   return (
     <main className="min-h-screen max-w-2xl mx-auto px-6 py-12">
       <Link
-        href={`/gallery/${slug}`}
+        href={`/?tab=${slug}`}
         className="text-neutral-500 hover:text-neutral-300 text-sm mb-8 block"
       >
         ← {gallery.title}
