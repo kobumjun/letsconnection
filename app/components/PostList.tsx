@@ -15,6 +15,21 @@ type Post = {
   comment_count: number;
 };
 
+function formatRelativeTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? "" : "s"} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+  return date.toLocaleDateString();
+}
+
 export function PostList({ gallery }: { gallery: string }) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,40 +42,28 @@ export function PostList({ gallery }: { gallery: string }) {
       .finally(() => setLoading(false));
   }, [gallery]);
 
-  if (loading) return <p className="text-neutral-500">Loading...</p>;
-  if (posts.length === 0) return <p className="text-neutral-500">No posts yet. Be the first.</p>;
+  if (loading) return <p style={{ color: "#9ca3af" }}>Loading...</p>;
+  if (posts.length === 0) return <p style={{ color: "#9ca3af" }}>No posts yet. Be the first.</p>;
 
   return (
-    <ul className="space-y-4">
-      {posts.map((post) => (
+    <ul>
+      {posts.map((post, index) => (
         <li key={post.id}>
           <Link
             href={`/gallery/${gallery}/post/${post.id}`}
-            className="block p-4 border border-neutral-800 rounded-lg hover:border-neutral-600 transition"
+            className="block py-4 hover:opacity-90 transition-opacity"
           >
-            <div className="flex gap-4">
-              {post.image_url && (
-                <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden bg-neutral-900">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={post.image_url}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <h2 className="font-medium truncate">{post.title}</h2>
-                <p className="text-neutral-500 text-sm mt-1">
-                  {post.nickname} · {new Date(post.created_at).toLocaleDateString()}
-                </p>
-                <div className="flex gap-4 mt-2 text-neutral-500 text-sm">
-                  <span>♥ {post.like_count ?? 0}</span>
-                  <span>💬 {post.comment_count ?? 0}</span>
-                </div>
-              </div>
-            </div>
+            <h2 className="text-lg font-medium mb-1" style={{ color: "#f5f5f5" }}>
+              {post.title}
+            </h2>
+            <p className="text-sm" style={{ color: "#9ca3af" }}>
+              {post.nickname} • {formatRelativeTime(post.created_at)} •{" "}
+              {post.comment_count ?? 0} comments • {post.like_count ?? 0} likes
+            </p>
           </Link>
+          {index < posts.length - 1 && (
+            <div className="h-px w-full" style={{ backgroundColor: "#1f2937" }} />
+          )}
         </li>
       ))}
     </ul>

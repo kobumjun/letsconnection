@@ -23,40 +23,43 @@ function HomeContent() {
   }, [tabParam]);
 
   return (
-    <main className="min-h-screen max-w-2xl mx-auto px-6 py-12">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-3">
+    <main className="min-h-screen max-w-2xl mx-auto px-6 py-8">
+      <header className="flex items-center justify-between mb-6">
+        <Link href="/" className="text-base font-medium" style={{ color: "#f5f5f5" }}>
           LET&apos;S CONNECTION
-        </h1>
-        <p className="text-neutral-400 text-lg">Build energy. Move together.</p>
-      </div>
+        </Link>
+        <Link
+          href={`/gallery/${activeTab}/write`}
+          className="text-sm hover:underline"
+          style={{ color: "#9ca3af" }}
+        >
+          Write Post
+        </Link>
+      </header>
 
-      <div className="flex gap-2 mb-6">
+      <nav className="flex justify-center gap-6 mb-4">
         {(Object.entries(GALLERIES) as [GallerySlug, (typeof GALLERIES)[GallerySlug]][]).map(
           ([slug, gallery]) => (
             <button
               key={slug}
               onClick={() => setActiveTab(slug)}
-              className={`flex-1 px-4 py-3 rounded-lg border transition ${
-                activeTab === slug
-                  ? "border-neutral-500 bg-neutral-800 text-neutral-100"
-                  : "border-neutral-700 text-neutral-400 hover:border-neutral-600 hover:text-neutral-300"
-              }`}
+              className="font-semibold text-base pb-1 transition"
+              style={{
+                color: "#f5f5f5",
+                borderBottom: activeTab === slug ? "2px solid #f5f5f5" : "2px solid transparent",
+              }}
             >
               {gallery.title}
             </button>
           )
         )}
-      </div>
+      </nav>
 
-      <Link
-        href={`/gallery/${activeTab}/write`}
-        className="block w-full mb-8 px-4 py-3 bg-neutral-800 border border-neutral-600 rounded-lg hover:bg-neutral-700 text-center transition"
-      >
-        Write Post
-      </Link>
+      <div
+        className="h-px w-full mb-6"
+        style={{ backgroundColor: "#1f2937" }}
+      />
 
-      <p className="text-neutral-500 text-sm mb-4">{GALLERIES[activeTab].header}</p>
       <PostList gallery={activeTab} />
     </main>
   );
@@ -64,11 +67,13 @@ function HomeContent() {
 
 export default function HomePage() {
   return (
-    <Suspense fallback={
-      <main className="min-h-screen max-w-2xl mx-auto px-6 py-12 flex items-center justify-center">
-        <p className="text-neutral-500">Loading...</p>
-      </main>
-    }>
+    <Suspense
+      fallback={
+        <main className="min-h-screen max-w-2xl mx-auto px-6 py-12 flex items-center justify-center">
+          <p style={{ color: "#9ca3af" }}>Loading...</p>
+        </main>
+      }
+    >
       <HomeContent />
     </Suspense>
   );
