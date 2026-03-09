@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { GALLERIES, type GallerySlug } from "@/lib/galleries";
+
+const VALID_SLUGS = ["debate", "execution", "achievement", "philosophy"];
 
 export default async function GalleryPage({
   params,
@@ -7,8 +8,8 @@ export default async function GalleryPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  if (slug in GALLERIES) {
-    redirect(`/?tab=${slug}`);
+  if (VALID_SLUGS.includes(slug)) {
+    redirect("/");
   }
   redirect("/");
 }

@@ -69,12 +69,14 @@ export function PostDetail({
         if (r.status === 404) throw new Error("Not found");
         return r.json();
       }),
-      fetch(`/api/posts/${postId}/comments`).then((r) => r.json()),
+      fetch(`/api/posts/${postId}/comments`)
+        .then((r) => (r.ok ? r.json() : []))
+        .then((data) => (Array.isArray(data) ? data : [])),
     ])
       .then(([p, c]) => {
         setPost(p);
-        setComments(c ?? []);
-        setLikeCount(p.like_count ?? 0);
+        setComments(c);
+        setLikeCount(p?.like_count ?? 0);
       })
       .catch(() => setPost(null))
       .finally(() => setLoading(false));
@@ -302,11 +304,19 @@ function CommentList({
   comments: Comment[];
   onDeleted: (id: string) => void;
 }) {
-  if (comments.length === 0) return null;
+  if (!Array.isArray(comments) || comments.length === 0) {
+    return (
+      <p className="text-neutral-500 text-sm py-4">No comments yet.</p>
+    );
+  }
+
+  const sortedComments = [...comments].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
 
   return (
     <ul className="space-y-4">
-      {comments.map((c) => (
+      {sortedComments.map((c) => (
         <CommentItem key={c.id} comment={c} onDeleted={onDeleted} />
       ))}
     </ul>

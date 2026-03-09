@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { sanitize, isNumericPassword } from "@/lib/utils";
-import { GALLERIES, type GallerySlug } from "@/lib/galleries";
 
 async function getLikeCounts(postIds: string[]) {
   if (postIds.length === 0) return new Map<string, number>();
@@ -59,14 +58,14 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  if (!gallery || !(gallery in GALLERIES)) {
+  if (!gallery || gallery !== "debate") {
     return NextResponse.json({ error: "Invalid gallery" }, { status: 400 });
   }
 
   const { data: posts, error } = await supabase
     .from("posts")
     .select("*")
-    .eq("gallery", gallery)
+    .in("gallery", ["execution", "achievement", "philosophy", "debate"])
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -102,7 +101,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!(gallery in GALLERIES)) {
+    if (gallery !== "debate") {
       return NextResponse.json({ error: "Invalid gallery" }, { status: 400 });
     }
 
@@ -120,7 +119,7 @@ export async function POST(request: NextRequest) {
     const { data: post, error } = await supabase
       .from("posts")
       .insert({
-        gallery,
+        gallery: "debate",
         title: safeTitle,
         content: safeContent,
         nickname: safeNickname,

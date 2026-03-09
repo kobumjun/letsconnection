@@ -50,7 +50,7 @@ export function PostList({ gallery }: { gallery: string }) {
       {posts.map((post, index) => (
         <li key={post.id}>
           <Link
-            href={`/gallery/${gallery}/post/${post.id}`}
+            href={`/gallery/debate/post/${post.id}`}
             className="block py-4 hover:opacity-90 transition-opacity"
           >
             <h2 className="text-lg font-medium mb-1" style={{ color: "#f5f5f5" }}>

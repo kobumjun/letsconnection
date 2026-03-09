@@ -59,7 +59,7 @@ export function WritePostForm({ gallery }: { gallery: string }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          gallery,
+          gallery: "debate",
           title: title.trim(),
           content: content.trim(),
           nickname: nickname.trim() || "hustler",
@@ -74,7 +74,7 @@ export function WritePostForm({ gallery }: { gallery: string }) {
       }
 
       const post = await res.json();
-      router.push(`/gallery/${gallery}/post/${post.id}`);
+      router.push(`/gallery/debate/post/${post.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
