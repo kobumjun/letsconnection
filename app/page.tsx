@@ -6,7 +6,6 @@ import { PostList } from "@/app/components/PostList";
 
 export default function HomePage() {
   const gallery = GALLERIES.debate;
-  const gallery = GALLERIES.debate;
 
   return (
     <main className="min-h-screen max-w-2xl mx-auto px-6 py-8">
