@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { TurnstileWidget } from "@/app/components/TurnstileWidget";
 
 const LIKED_KEY = "hustler_liked_posts";
 
@@ -245,8 +244,6 @@ function CommentForm({
   const [nickname, setNickname] = useState("hustler");
   const [content, setContent] = useState("");
   const [password, setPassword] = useState("");
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const [turnstileReset, setTurnstileReset] = useState(0);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -261,10 +258,6 @@ function CommentForm({
       setError("Password is required");
       return;
     }
-    if (!turnstileToken) {
-      setError("Please complete the verification");
-      return;
-    }
     setLoading(true);
     const res = await fetch("/api/comments", {
       method: "POST",
@@ -274,7 +267,6 @@ function CommentForm({
         content: content.trim(),
         nickname: nickname.trim() || "hustler",
         password,
-        turnstileToken,
       }),
     });
     const data = await res.json();
@@ -286,8 +278,6 @@ function CommentForm({
     onAdded(data);
     setContent("");
     setPassword("");
-    setTurnstileToken(null);
-    setTurnstileReset((prev) => prev + 1);
     setLoading(false);
   }
 
@@ -316,13 +306,6 @@ function CommentForm({
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password (for delete)"
           className="px-3 py-2 bg-neutral-900 border border-neutral-700 rounded text-sm w-36"
-        />
-      </div>
-      <div className="py-2">
-        <TurnstileWidget
-          onVerify={setTurnstileToken}
-          onExpire={() => setTurnstileToken(null)}
-          resetTrigger={turnstileReset}
         />
       </div>
       <div className="flex flex-wrap gap-3">

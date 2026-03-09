@@ -1,31 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { sanitize, isNumericPassword, checkAdminAuth } from "@/lib/utils";
-import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { post_id, content, nickname = "hustler", password, turnstileToken } = body;
+    const { post_id, content, nickname = "hustler", password } = body;
 
     if (!post_id || !content || !password) {
       return NextResponse.json(
         { error: "Missing required fields: post_id, content, password" },
-        { status: 400 }
-      );
-    }
-
-    if (!turnstileToken) {
-      return NextResponse.json(
-        { error: "Captcha verification failed" },
-        { status: 400 }
-      );
-    }
-
-    const captchaValid = await verifyTurnstileToken(turnstileToken);
-    if (!captchaValid) {
-      return NextResponse.json(
-        { error: "Captcha verification failed" },
         { status: 400 }
       );
     }
