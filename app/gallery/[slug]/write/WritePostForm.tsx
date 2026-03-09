@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { TurnstileWidget } from "@/app/components/TurnstileWidget";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
@@ -12,6 +13,8 @@ export function WritePostForm({ gallery }: { gallery: string }) {
   const [nickname, setNickname] = useState("hustler");
   const [password, setPassword] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileReset, setTurnstileReset] = useState(0);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -27,8 +30,12 @@ export function WritePostForm({ gallery }: { gallery: string }) {
       setError("Content is required");
       return;
     }
-    if (!/^\d+$/.test(password)) {
-      setError("Password must be numeric only");
+    if (!password) {
+      setError("Password is required");
+      return;
+    }
+    if (!turnstileToken) {
+      setError("Please complete the verification");
       return;
     }
     if (imageFile && imageFile.size > MAX_IMAGE_SIZE) {
@@ -65,6 +72,7 @@ export function WritePostForm({ gallery }: { gallery: string }) {
           nickname: nickname.trim() || "hustler",
           password,
           image_url: imageUrl,
+          turnstileToken,
         }),
       });
 
@@ -121,16 +129,14 @@ export function WritePostForm({ gallery }: { gallery: string }) {
       </div>
       <div>
         <label className="block text-sm text-neutral-400 mb-2">
-          Numeric Password (for delete)
+          Password (for delete)
         </label>
         <input
           type="password"
-          inputMode="numeric"
-          pattern="[0-9]*"
           value={password}
-          onChange={(e) => setPassword(e.target.value.replace(/\D/g, ""))}
+          onChange={(e) => setPassword(e.target.value)}
           className="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded focus:outline-none focus:border-neutral-500"
-          placeholder="Numbers only"
+          placeholder="Numeric or admin password"
           maxLength={20}
           required
         />
@@ -144,6 +150,13 @@ export function WritePostForm({ gallery }: { gallery: string }) {
           accept="image/jpeg,image/png,image/gif,image/webp"
           onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
           className="w-full text-sm text-neutral-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-neutral-800 file:text-neutral-200"
+        />
+      </div>
+      <div className="py-2">
+        <TurnstileWidget
+          onVerify={setTurnstileToken}
+          onExpire={() => setTurnstileToken(null)}
+          resetTrigger={turnstileReset}
         />
       </div>
       <button

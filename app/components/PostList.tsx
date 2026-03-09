@@ -13,6 +13,7 @@ type Post = {
   created_at: string;
   like_count: number;
   comment_count: number;
+  is_admin?: boolean;
 };
 
 function formatRelativeTime(dateStr: string): string {
@@ -57,7 +58,16 @@ export function PostList({ gallery }: { gallery: string }) {
               {post.title}
             </h2>
             <p className="text-sm" style={{ color: "#9ca3af" }}>
-              {post.nickname} • {formatRelativeTime(post.created_at)} •{" "}
+              <span>
+                {post.nickname}
+                {post.is_admin && (
+                  <span className="ml-1 text-[10px] opacity-80" title="verified">
+                    ✓
+                  </span>
+                )}
+              </span>
+              {" • "}
+              {formatRelativeTime(post.created_at)} •{" "}
               {post.comment_count ?? 0} comments • {post.like_count ?? 0} likes
             </p>
           </Link>

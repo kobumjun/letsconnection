@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { TurnstileWidget } from "@/app/components/TurnstileWidget";
 
 const LIKED_KEY = "hustler_liked_posts";
 
@@ -31,6 +32,7 @@ type Post = {
   created_at: string;
   like_count: number;
   comment_count: number;
+  is_admin?: boolean;
 };
 
 type Comment = {
@@ -39,7 +41,27 @@ type Comment = {
   nickname: string;
   content: string;
   created_at: string;
+  is_admin?: boolean;
 };
+
+function AuthorWithBadge({
+  nickname,
+  isAdmin,
+}: {
+  nickname: string;
+  isAdmin?: boolean;
+}) {
+  return (
+    <span>
+      {nickname}
+      {isAdmin && (
+        <span className="ml-1 text-[10px] text-neutral-400" title="verified">
+          ✓
+        </span>
+      )}
+    </span>
+  );
+}
 
 export function PostDetail({
   gallerySlug,
@@ -127,7 +149,9 @@ export function PostDetail({
     <article className="border border-neutral-800 rounded-lg p-6">
       <h1 className="text-2xl font-medium mb-2">{post.title}</h1>
       <p className="text-neutral-500 text-sm mb-4">
-        {post.nickname} · {new Date(post.created_at).toLocaleString()}
+        <AuthorWithBadge nickname={post.nickname} isAdmin={post.is_admin} />
+        {" · "}
+        {new Date(post.created_at).toLocaleString()}
       </p>
       <div className="prose prose-invert max-w-none mb-6 whitespace-pre-wrap">
         {post.content}
@@ -221,6 +245,8 @@ function CommentForm({
   const [nickname, setNickname] = useState("hustler");
   const [content, setContent] = useState("");
   const [password, setPassword] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileReset, setTurnstileReset] = useState(0);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -231,8 +257,12 @@ function CommentForm({
       setError("Content is required");
       return;
     }
-    if (!/^\d+$/.test(password)) {
-      setError("Password must be numeric only");
+    if (!password) {
+      setError("Password is required");
+      return;
+    }
+    if (!turnstileToken) {
+      setError("Please complete the verification");
       return;
     }
     setLoading(true);
@@ -244,6 +274,7 @@ function CommentForm({
         content: content.trim(),
         nickname: nickname.trim() || "hustler",
         password,
+        turnstileToken,
       }),
     });
     const data = await res.json();
@@ -255,6 +286,8 @@ function CommentForm({
     onAdded(data);
     setContent("");
     setPassword("");
+    setTurnstileToken(null);
+    setTurnstileReset((prev) => prev + 1);
     setLoading(false);
   }
 
@@ -279,12 +312,20 @@ function CommentForm({
         />
         <input
           type="password"
-          inputMode="numeric"
           value={password}
-          onChange={(e) => setPassword(e.target.value.replace(/\D/g, ""))}
+          onChange={(e) => setPassword(e.target.value)}
           placeholder="Password (for delete)"
           className="px-3 py-2 bg-neutral-900 border border-neutral-700 rounded text-sm w-36"
         />
+      </div>
+      <div className="py-2">
+        <TurnstileWidget
+          onVerify={setTurnstileToken}
+          onExpire={() => setTurnstileToken(null)}
+          resetTrigger={turnstileReset}
+        />
+      </div>
+      <div className="flex flex-wrap gap-3">
         <button
           type="submit"
           disabled={loading}
@@ -353,7 +394,9 @@ function CommentItem({
   return (
     <li className="py-3 border-b border-neutral-800/50 last:border-0">
       <p className="text-neutral-500 text-xs mb-1">
-        {comment.nickname} · {new Date(comment.created_at).toLocaleString()}
+        <AuthorWithBadge nickname={comment.nickname} isAdmin={comment.is_admin} />
+        {" · "}
+        {new Date(comment.created_at).toLocaleString()}
       </p>
       <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
       {!deleteMode ? (

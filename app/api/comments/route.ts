@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { sanitize, isNumericPassword } from "@/lib/utils";
+import { sanitize, isNumericPassword, checkAdminAuth } from "@/lib/utils";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { post_id, content, nickname = "hustler", password } = body;
+    const { post_id, content, nickname = "hustler", password, turnstileToken } = body;
 
     if (!post_id || !content || !password) {
       return NextResponse.json(
@@ -14,14 +15,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!isNumericPassword(password)) {
+    if (!turnstileToken) {
+      return NextResponse.json(
+        { error: "Captcha verification failed" },
+        { status: 400 }
+      );
+    }
+
+    const captchaValid = await verifyTurnstileToken(turnstileToken);
+    if (!captchaValid) {
+      return NextResponse.json(
+        { error: "Captcha verification failed" },
+        { status: 400 }
+      );
+    }
+
+    const safeNickname = sanitize(nickname || "hustler");
+    const adminCheck = checkAdminAuth(safeNickname, password);
+
+    if (adminCheck.error) {
+      return NextResponse.json({ error: adminCheck.error }, { status: 403 });
+    }
+
+    if (!adminCheck.isAdmin && !isNumericPassword(password)) {
       return NextResponse.json(
         { error: "Password must be numeric only" },
         { status: 400 }
       );
     }
 
-    const safeNickname = sanitize(nickname || "hustler");
     const safeContent = sanitize(content);
 
     const { data: comment, error } = await supabase
@@ -31,6 +53,7 @@ export async function POST(request: NextRequest) {
         nickname: safeNickname,
         content: safeContent,
         password,
+        is_admin: adminCheck.isAdmin,
       })
       .select()
       .single();

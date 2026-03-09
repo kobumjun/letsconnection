@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { sanitize, isNumericPassword } from "@/lib/utils";
+import { sanitize, isNumericPassword, checkAdminAuth } from "@/lib/utils";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 async function getLikeCounts(postIds: string[]) {
   if (postIds.length === 0) return new Map<string, number>();
@@ -92,7 +93,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { gallery, title, content, nickname = "hustler", password, image_url } = body;
+    const { gallery, title, content, nickname = "hustler", password, image_url, turnstileToken } =
+      body;
 
     if (!gallery || !title || !content || !password) {
       return NextResponse.json(
@@ -101,18 +103,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!turnstileToken) {
+      return NextResponse.json(
+        { error: "Captcha verification failed" },
+        { status: 400 }
+      );
+    }
+
+    const captchaValid = await verifyTurnstileToken(turnstileToken);
+    if (!captchaValid) {
+      return NextResponse.json(
+        { error: "Captcha verification failed" },
+        { status: 400 }
+      );
+    }
+
     if (gallery !== "debate") {
       return NextResponse.json({ error: "Invalid gallery" }, { status: 400 });
     }
 
-    if (!isNumericPassword(password)) {
+    const safeNickname = sanitize(nickname || "hustler");
+    const adminCheck = checkAdminAuth(safeNickname, password);
+
+    if (adminCheck.error) {
+      return NextResponse.json({ error: adminCheck.error }, { status: 403 });
+    }
+
+    if (!adminCheck.isAdmin && !isNumericPassword(password)) {
       return NextResponse.json(
         { error: "Password must be numeric only" },
         { status: 400 }
       );
     }
 
-    const safeNickname = sanitize(nickname || "hustler");
     const safeTitle = sanitize(title);
     const safeContent = sanitize(content);
 
@@ -125,6 +148,7 @@ export async function POST(request: NextRequest) {
         nickname: safeNickname,
         password,
         image_url: image_url || null,
+        is_admin: adminCheck.isAdmin,
       })
       .select()
       .single();
